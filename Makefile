@@ -10,3 +10,4 @@ git:
 	git status
 	git commit -m "added file"
 	git push
+	clear
