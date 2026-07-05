@@ -1,5 +1,4 @@
 pinecone
 google-adk
 python-dotenv
-sentence-transformers
 huggingface_hub
