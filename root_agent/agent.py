@@ -1,5 +1,6 @@
 from google.adk.agents import Agent
 from google.adk.tools import FunctionTool
+from root_agent.tools import translator_tool
 
 from pinecone import Pinecone
 from huggingface_hub import InferenceClient
@@ -57,8 +58,8 @@ search_tool = FunctionTool(search_recipes)
 
 root_agent = Agent(
     name="recipe_agent",
-    model="gemini-3.5-flash",
-    tools=[search_tool],
+    model="gemini-2.5-flash",
+    tools=[search_tool, translator_tool],
     instruction="""
 You are a recipe assistant.
 
@@ -82,5 +83,7 @@ Workflow:
    - Instructions
    - Cooking Time
    - Tips
+
+8. If the user requests the recipe or response to be translated into another language (e.g. Telugu, Hindi, Spanish, etc.), call the translate_text tool to perform the translation.
 """
 )
