@@ -1,6 +1,6 @@
 from google.adk.agents import Agent
 from google.adk.tools import FunctionTool
-from root_agent.tools import translator_tool
+from root_agent.tools import translator_tool, modify_recipe_tool
 
 from pinecone import Pinecone
 from huggingface_hub import InferenceClient
@@ -59,7 +59,7 @@ search_tool = FunctionTool(search_recipes)
 root_agent = Agent(
     name="recipe_agent",
     model="gemini-2.5-flash",
-    tools=[search_tool, translator_tool],
+    tools=[search_tool, translator_tool, modify_recipe_tool],
     instruction="""
 You are a recipe assistant.
 
