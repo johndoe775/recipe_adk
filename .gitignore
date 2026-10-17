@@ -10,3 +10,8 @@ wheels/
 .venv
 .env
 Makefile
+.env
+.venv/
+__pycache__/
+*.pyc
+sessions.db

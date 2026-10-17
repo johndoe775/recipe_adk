@@ -4,3 +4,5 @@ sentence-transformers
 python-dotenv
 torch
 litellm
+uvicorn
+aiosqlite
