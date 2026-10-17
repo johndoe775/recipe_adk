@@ -1,4 +1,5 @@
-
+from root_agent.schema import Recipe
+from google.adk.models.lite_llm import LiteLlm
 from google.adk.agents import Agent
 from google.adk.tools import FunctionTool
 from root_agent.tools import translator_tool, modify_recipe_tool
@@ -12,6 +13,17 @@ import os
 import torch
 
 load_dotenv()
+
+
+api_key = os.getenv("GROQ_API_KEY")
+
+if not api_key:
+    raise ValueError("GROQ_API_KEY is missing from the environment")
+
+groq_model = LiteLlm(
+    model="groq/openai/gpt-oss-20b",
+    api_key=api_key,
+)
 
 # -----------------------------------
 # Initialize model and Pinecone ONCE
@@ -90,7 +102,8 @@ search_tool = FunctionTool(search_recipes)
 
 root_agent = Agent(
     name="recipe_agent",
-    model="gemini-2.5-flash",
+    model=groq_model,
+    #output_schema=Recipe,
     tools=[
         search_tool,
         translator_tool,
