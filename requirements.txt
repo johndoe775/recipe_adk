@@ -1,4 +1,5 @@
-pinecone
 google-adk
+pinecone
+sentence-transformers
 python-dotenv
-huggingface_hub
+torch
