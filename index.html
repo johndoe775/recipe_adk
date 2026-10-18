@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7f5f0" />
+  <title>Recipe Assistant</title>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --panel: #ffffff;
+      --text: #242722;
+      --muted: #697067;
+      --accent: #287a52;
+      --accent-dark: #1e613f;
+      --border: #e4e6df;
+      --user: #e5f3e9;
+      --assistant: #f2f3ef;
+      --danger: #a52a2a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+    .app { max-width: 900px; margin: 0 auto; padding: 28px 18px 36px; }
+    header { text-align: center; margin: 10px 0 24px; }
+    .logo {
+      display: inline-grid; place-items: center; width: 54px; height: 54px;
+      border-radius: 18px; background: #e2f0e6; color: var(--accent); font-size: 28px;
+      margin-bottom: 10px;
+    }
+    h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.25rem); letter-spacing: -0.04em; }
+    .subtitle { color: var(--muted); margin: 8px 0 0; }
+    .chat-panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(30, 45, 33, .06); overflow: hidden;
+    }
+    .chat-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 15px 20px; border-bottom: 1px solid var(--border);
+    }
+    .status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .9rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ca66b; }
+    .clear-btn, .translate-btn {
+      border: 1px solid var(--border); background: white; color: var(--text);
+      border-radius: 10px; padding: 9px 12px; cursor: pointer; font: inherit;
+    }
+    .clear-btn:hover, .translate-btn:hover { background: #f7f8f5; }
+    #messages {
+      padding: 22px; min-height: 360px; max-height: 58vh; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .message { display: flex; gap: 10px; align-items: flex-start; max-width: 100%; }
+    .message.user { flex-direction: row-reverse; }
+    .avatar {
+      flex: 0 0 34px; width: 34px; height: 34px; display: grid; place-items: center;
+      border-radius: 12px; background: #e2f0e6; color: var(--accent); font-size: 17px;
+    }
+    .user .avatar { background: #e7eaf8; color: #4556a0; }
+    .bubble {
+      min-width: 0; max-width: min(690px, calc(100% - 44px)); padding: 13px 15px;
+      border-radius: 4px 15px 15px 15px; background: var(--assistant);
+      line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap;
+    }
+    .user .bubble { background: var(--user); border-radius: 15px 4px 15px 15px; }
+    .bubble p { margin: 0 0 10px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .message-actions { display: flex; justify-content: flex-end; margin-top: 9px; }
+    .translate-btn { font-size: .86rem; padding: 7px 10px; color: var(--accent-dark); }
+    .translate-btn:disabled, button:disabled { opacity: .55; cursor: not-allowed; }
+    .composer { padding: 16px; border-top: 1px solid var(--border); }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 13px; }
+    .suggestion {
+      border: 1px solid var(--border); border-radius: 999px; padding: 7px 11px;
+      color: #4f5c50; background: #fff; cursor: pointer; font: inherit; font-size: .86rem;
+    }
+    .suggestion:hover { border-color: #9bc7a8; background: #f4faf5; }
+    .input-row { display: flex; align-items: flex-end; gap: 10px; }
+    #messageInput {
+      width: 100%; min-height: 50px; max-height: 150px; resize: vertical;
+      border: 1px solid #d9ddd5; border-radius: 14px; padding: 13px 14px;
+      font: inherit; line-height: 1.4; outline: none; background: white; color: var(--text);
+    }
+    #messageInput:focus { border-color: #7fb391; box-shadow: 0 0 0 3px rgba(40, 122, 82, .10); }
+    #sendBtn {
+      flex: 0 0 auto; border: 0; border-radius: 13px; padding: 0 19px; height: 50px;
+      color: white; background: var(--accent); font: inherit; font-weight: 650; cursor: pointer;
+    }
+    #sendBtn:hover { background: var(--accent-dark); }
+    .hint { color: var(--muted); font-size: .78rem; margin: 10px 2px 0; }
+    .error { color: var(--danger); }
+    .typing { color: var(--muted); font-style: italic; }
+    footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 18px; }
+    @media (max-width: 600px) {
+      .app { padding: 18px 10px 24px; }
+      #messages { padding: 15px; min-height: 320px; max-height: 60vh; }
+      .chat-top { padding: 12px 14px; }
+      .bubble { padding: 11px 12px; }
+      #sendBtn { padding: 0 14px; }
+      .clear-btn { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="logo" aria-hidden="true">🍲</div>
+      <h1>Recipe Assistant</h1>
+      <p class="subtitle">Find recipes, adjust ingredients, and cook with confidence.</p>
+    </header>
+
+    <section class="chat-panel" aria-label="Recipe assistant chat">
+      <div class="chat-top">
+        <div class="status"><span class="dot"></span><span>Recipe assistant</span></div>
+        <button class="clear-btn" id="clearBtn" type="button">New chat</button>
+      </div>
+
+      <div id="messages" role="log" aria-live="polite" aria-relevant="additions">
+        <div class="message assistant">
+          <div class="avatar" aria-hidden="true">🍲</div>
+          <div class="bubble">What would you like to cook today? Ask for a recipe, ingredients, cooking steps, or a Telugu translation.</div>
+        </div>
+      </div>
+
+      <form class="composer" id="chatForm">
+        <div class="suggestions" aria-label="Example prompts">
+          <button class="suggestion" type="button" data-prompt="Show me paneer recipes">Paneer recipes</button>
+          <button class="suggestion" type="button" data-prompt="Suggest a quick vegetarian dinner">Quick vegetarian dinner</button>
+          <button class="suggestion" type="button" data-prompt="Find a recipe using potatoes and tomatoes">Use my ingredients</button>
+        </div>
+        <div class="input-row">
+          <textarea id="messageInput" rows="1" maxlength="5000" placeholder="Ask for a recipe..." aria-label="Your message" required></textarea>
+          <button id="sendBtn" type="submit">Send</button>
+        </div>
+        <p class="hint">Press Enter to send · Shift + Enter for a new line</p>
+      </form>
+    </section>
+    <footer>Recipe results are generated by your connected ADK backend.</footer>
+  </main>
+
+  <script>
+    // For local testing, use http://127.0.0.1:8000.
+    // When deployed, replace this with your hosted FastAPI backend URL.
+    const API_BASE_URL = "http://127.0.0.1:8000";
+
+    const messagesEl = document.getElementById("messages");
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    // Keep the same IDs for the current browser session so ADK can retain context.
+    const userId = getOrCreateId("recipe_user_id");
+    let sessionId = getOrCreateId("recipe_session_id");
+    let lastAssistantText = "";
+
+    function getOrCreateId(key) {
+      try {
+        let value = sessionStorage.getItem(key);
+        if (!value) {
+          value = key + "_" + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "_" + Math.random().toString(36).slice(2));
+          sessionStorage.setItem(key, value);
+        }
+        return value;
+      } catch (_) {
+        return key + "_" + Math.random().toString(36).slice(2);
+      }
+    }
+
+    function addMessage(role, text, options = {}) {
+      const row = document.createElement("div");
+      row.className = "message " + role;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.setAttribute("aria-hidden", "true");
+      avatar.textContent = role === "user" ? "You" : "🍲";
+
+      const wrap = document.createElement("div");
+      wrap.style.minWidth = "0";
+      wrap.style.maxWidth = "100%";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+      wrap.appendChild(bubble);
+
+      if (role === "assistant" && options.translate !== false && text.trim()) {
+        const actions = document.createElement("div");
+        actions.className = "message-actions";
+        const translateBtn = document.createElement("button");
+        translateBtn.type = "button";
+        translateBtn.className = "translate-btn";
+        translateBtn.textContent = "Translate to Telugu";
+        translateBtn.addEventListener("click", () => translateToTelugu(text, translateBtn));
+        actions.appendChild(translateBtn);
+        wrap.appendChild(actions);
+      }
+
+      row.appendChild(avatar);
+      row.appendChild(wrap);
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return row;
+    }
+
+    function addTyping() {
+      const row = addMessage("assistant", "Thinking...", { translate: false });
+      row.querySelector(".bubble").classList.add("typing");
+      return row;
+    }
+
+    async function callBackend(message) {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, session_id: sessionId, message })
+      });
+
+      if (!response.ok) {
+        let detail = "";
+        try {
+          const body = await response.json();
+          detail = body.detail || "";
+        } catch (_) {}
+        throw new Error(detail || `Request failed (${response.status}).`);
+      }
+
+      const data = await response.json();
+      if (!data || typeof data.answer !== "string") {
+        throw new Error("The backend response did not contain an answer.");
+      }
+      return data.answer.trim() || "I couldn't generate a response. Please try again.";
+    }
+
+    async function sendMessage(message) {
+      const trimmed = message.trim();
+      if (!trimmed || sendBtn.disabled) return;
+
+      addMessage("user", trimmed, { translate: false });
+      input.value = "";
+      sendBtn.disabled = true;
+      input.disabled = true;
+      const typing = addTyping();
+
+      try {
+        const answer = await callBackend(trimmed);
+        typing.remove();
+        lastAssistantText = answer;
+        addMessage("assistant", answer);
+      } catch (error) {
+        typing.remove();
+        const row = addMessage("assistant", "Could not reach the recipe server. Check that your FastAPI backend is running and API_BASE_URL is correct.\n\nDetails: " + error.message, { translate: false });
+        row.querySelector(".bubble").classList.add("error");
+      } finally {
+        sendBtn.disabled = false;
+        input.disabled = false;
+        input.focus();
+      }
+    }
+
+    async function translateToTelugu(originalText, button) {
+      if (button.disabled) return;
+      button.disabled = true;
+      const oldLabel = button.textContent;
+      button.textContent = "Translating...";
+      try {
+        // This sends a normal chat message to the same ADK session.
+        // The agent must be instructed to translate the supplied text into Telugu.
+        const translated = await callBackend(
+          "Translate the following text into natural Telugu. Preserve the meaning, recipe quantities, ingredient names, numbered steps, and formatting. Return only the Telugu translation, with no introduction:\n\n" + originalText
+        );
+        addMessage("assistant", translated, { translate: false });
+      } catch (error) {
+        const row = addMessage("assistant", "Translation failed: " + error.message, { translate: false });
+        row.querySelector(".bubble").classList.add("error");
+      } finally {
+        button.disabled = false;
+        button.textContent = oldLabel;
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendMessage(input.value);
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach((button) => {
+      button.addEventListener("click", () => sendMessage(button.dataset.prompt));
+    });
+
+    clearBtn.addEventListener("click", () => {
+      sessionId = "recipe_session_" + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "_" + Math.random().toString(36).slice(2));
+      try { sessionStorage.setItem("recipe_session_id", sessionId); } catch (_) {}
+      messagesEl.replaceChildren();
+      addMessage("assistant", "New chat started. What would you like to cook?", { translate: false });
+      lastAssistantText = "";
+      input.focus();
+    });
+  </script>
+</body>
+</html>
