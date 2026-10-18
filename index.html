@@ -714,9 +714,16 @@
   </main>
 
   <script>
-    // For local testing, use http://127.0.0.1:8000.
-    // When deployed, replace this with your hosted FastAPI backend URL.
-    const API_BASE_URL = "http://127.0.0.1:8000";
+    // GitHub Secrets cannot be read directly from browser JavaScript.
+    // For GitHub Pages or static hosting, inject this value during build/deploy,
+    // or keep the local fallback for development.
+    const API_BASE_URL = (() => {
+      const runtimeUrl =
+        (window.__APP_CONFIG__ && window.__APP_CONFIG__.API_BASE_URL) ||
+        document.documentElement.getAttribute("data-api-base-url") ||
+        "http://127.0.0.1:8000";
+      return runtimeUrl.replace(/\/$/, "");
+    })();
 
     const messagesEl = document.getElementById("messages");
     const form = document.getElementById("chatForm");
