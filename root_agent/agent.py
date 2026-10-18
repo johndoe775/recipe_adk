@@ -14,30 +14,43 @@ import torch
 
 load_dotenv()
 
-
-api_key = os.getenv("GROQ_API_KEY")
-
-if not api_key:
-    raise ValueError("GROQ_API_KEY is missing from the environment")
-
-groq_model = LiteLlm(
-    model="groq/openai/gpt-oss-20b",
-    api_key=api_key,
-)
-
 # -----------------------------------
-# Initialize model and Pinecone ONCE
+# Lazy, cached initialization.
+# This keeps the same caching idea, but avoids heavy startup work
+# during app import on Render.
 # -----------------------------------
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-model = SentenceTransformer(
-    MODEL_NAME,
-    device="cuda" if torch.cuda.is_available() else "cpu"
-)
 
-pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-index = pc.Index("recipes")
+@lru_cache(maxsize=1)
+def get_groq_model():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY is missing from the environment")
+
+    return LiteLlm(
+        model="groq/openai/gpt-oss-20b",
+        api_key=api_key,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_sentence_model():
+    return SentenceTransformer(
+        MODEL_NAME,
+        device="cuda" if torch.cuda.is_available() else "cpu",
+    )
+
+
+@lru_cache(maxsize=1)
+def get_pinecone_index():
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
+    if not pinecone_api_key:
+        raise ValueError("PINECONE_API_KEY is missing from the environment")
+
+    pc = Pinecone(api_key=pinecone_api_key)
+    return pc.Index("recipes")
 
 
 # -----------------------------------
@@ -50,10 +63,11 @@ def embed_query(query: str) -> tuple:
     Cache embeddings for repeated queries.
     Tuple makes the cached result immutable.
     """
-    vector = model.encode(
+    sentence_model = get_sentence_model()
+    vector = sentence_model.encode(
         query,
         normalize_embeddings=True,
-        convert_to_numpy=True
+        convert_to_numpy=True,
     )
 
     return tuple(vector.tolist())
@@ -69,12 +83,13 @@ def search_recipes(query: str) -> dict:
     Uses local cached embeddings and the default namespace.
     """
 
+    pinecone_index = get_pinecone_index()
     query_vector = list(embed_query(query.strip().lower()))
 
-    results = index.query(
+    results = pinecone_index.query(
         vector=query_vector,
         top_k=10,
-        include_metadata=True
+        include_metadata=True,
     )
 
     recipes = []
