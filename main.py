@@ -1,56 +1,62 @@
-
 import logging
 import os
+import sys
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from google.adk.agents import Agent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai import types
+# Configure logging before importing the ADK agent so import-time errors are visible.
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    stream=sys.stdout,
+)
+logger = logging.getLogger("recipe_assistant")
+logger.info("Starting Recipe Assistant API imports")
 
-from root_agent.agent import root_agent
+try:
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.genai import types
+    from root_agent.agent import root_agent
+except Exception:
+    logger.exception("Failed while importing ADK dependencies or root_agent.agent")
+    raise
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-def get_port() -> int:
-    raw_port = os.environ.get("PORT", "8000")
-    try:
-        port = int(raw_port)
-    except (TypeError, ValueError):
-        return 8000
-
-    return max(1, min(port, 65535))
-
+logger.info("Imports completed successfully")
 
 APP_NAME = root_agent.name
-
 app = FastAPI(title="Recipe Assistant API")
 
+# Replace YOUR_USERNAME with the GitHub username/organization hosting the Pages site.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://YOUR_USERNAME.github.io",
+        "https://johndoe775.github.io/recipe_adk/",
         "http://localhost:5500",
         "http://127.0.0.1:5500",
     ],
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
-# Explicitly initialize ADK session storage and runner.
+logger.info("Creating ADK session service")
 session_service = InMemorySessionService()
 
-runner = Runner(
-    agent=root_agent,
-    app_name=APP_NAME,
-    session_service=session_service,
-)
+logger.info("Initializing ADK Runner for agent %s", APP_NAME)
+try:
+    runner = Runner(
+        agent=root_agent,
+        app_name=APP_NAME,
+        session_service=session_service,
+    )
+except Exception:
+    logger.exception("Failed to initialize ADK Runner")
+    raise
+
+logger.info("ADK Runner initialized; creating API routes")
 
 
 class ChatRequest(BaseModel):
@@ -75,6 +81,12 @@ async def health():
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
+    logger.info(
+        "Received chat request user_id=%s session_id=%s message_length=%d",
+        request.user_id,
+        request.session_id,
+        len(request.message),
+    )
     try:
         session = await session_service.get_session(
             app_name=APP_NAME,
@@ -83,6 +95,7 @@ async def chat(request: ChatRequest):
         )
 
         if session is None:
+            logger.info("Creating new ADK session")
             await session_service.create_session(
                 app_name=APP_NAME,
                 user_id=request.user_id,
@@ -95,7 +108,6 @@ async def chat(request: ChatRequest):
         )
 
         answer_parts = []
-
         async for event in runner.run_async(
             user_id=request.user_id,
             session_id=request.session_id,
@@ -108,19 +120,26 @@ async def chat(request: ChatRequest):
                     if part.text
                 )
 
-        return ChatResponse(answer="\n".join(answer_parts))
+        answer = "\n".join(answer_parts).strip()
+        logger.info("Chat request completed; answer_length=%d", len(answer))
+        return ChatResponse(answer=answer)
 
     except Exception as exc:
         logger.exception("ADK chat request failed")
         raise HTTPException(
             status_code=500,
-            detail="Failed to process the recipe request.",
+            detail="Failed to process the recipe request. Check server logs.",
         ) from exc
 
 
 if __name__ == "__main__":
+    # Render sets PORT automatically. 10000 is only a local fallback.
+    port = int(os.environ.get("PORT", "10000"))
+    logger.info("Starting Uvicorn on 0.0.0.0:%d", port)
     uvicorn.run(
-        app,
+        "main:app",
         host="0.0.0.0",
-        port=get_port(),
+        port=port,
+        log_level=os.getenv("LOG_LEVEL", "info").lower(),
+        access_log=True,
     )
