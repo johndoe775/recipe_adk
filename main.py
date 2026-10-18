@@ -17,6 +17,17 @@ from root_agent.agent import root_agent
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def get_port() -> int:
+    raw_port = os.environ.get("PORT", "8000")
+    try:
+        port = int(raw_port)
+    except (TypeError, ValueError):
+        return 8000
+
+    return max(1, min(port, 65535))
+
+
 APP_NAME = root_agent.name
 
 app = FastAPI(title="Recipe Assistant API")
@@ -50,6 +61,11 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
+
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "recipe-assistant"}
 
 
 @app.get("/health")
@@ -106,5 +122,5 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", "8000")),
+        port=get_port(),
     )
