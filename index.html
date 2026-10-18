@@ -7,42 +7,439 @@
   <title>Recipe Assistant</title>
   <style>
     :root {
-      --bg: #f7f5f0;
+      --bg: #f6f2ea;
       --panel: #ffffff;
-      --text: #242722;
-      --muted: #697067;
+      --panel-alt: #f8f6f2;
+      --text: #1f2a1f;
+      --muted: #5f6d60;
       --accent: #287a52;
-      --accent-dark: #1e613f;
-      --border: #e4e6df;
-      --user: #e5f3e9;
-      --assistant: #f2f3ef;
+      --accent-dark: #1d5d3f;
+      --accent-soft: #eaf5ee;
+      --border: #e7eadf;
+      --shadow: 0 18px 50px rgba(32, 48, 39, 0.08);
+      --user: #e9f7ef;
+      --assistant: #f3f3ee;
       --danger: #a52a2a;
+      --gold: #f3c76b;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(133, 192, 152, 0.15), transparent 25%),
+        linear-gradient(180deg, #f7f3eb 0%, #f6f2ea 100%);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       min-height: 100vh;
     }
-    .app { max-width: 900px; margin: 0 auto; padding: 28px 18px 36px; }
-    header { text-align: center; margin: 10px 0 24px; }
-    .logo {
-      display: inline-grid; place-items: center; width: 54px; height: 54px;
-      border-radius: 18px; background: #e2f0e6; color: var(--accent); font-size: 28px;
-      margin-bottom: 10px;
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
     }
-    h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.25rem); letter-spacing: -0.04em; }
-    .subtitle { color: var(--muted); margin: 8px 0 0; }
+
+    .page-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(231, 234, 223, 0.9);
+      border-radius: 22px;
+      box-shadow: 0 12px 28px rgba(27, 53, 40, 0.04);
+      padding: 16px 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-mark {
+      display: grid; place-items: center;
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ebf8ef, #dfeee4);
+      color: var(--accent);
+      font-size: 22px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.92rem;
+      padding: 8px 10px;
+      border-radius: 10px;
+      transition: 0.2s ease;
+    }
+
+    .nav a:hover { background: #f4f5f1; color: var(--text); }
+
+    .nav-button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(40,122,82,0.18);
+    }
+
+    .nav-button:hover { background: var(--accent-dark); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 22px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 26px;
+      overflow: hidden;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #dbe9df;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.5rem, 5vw, 4.2rem);
+      line-height: 0.96;
+      letter-spacing: -0.06em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.06rem;
+      line-height: 1.7;
+      max-width: 60ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .primary-button, .secondary-button {
+      border-radius: 14px;
+      padding: 13px 18px;
+      border: none;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .primary-button {
+      background: linear-gradient(135deg, var(--accent), #3c9a68);
+      color: white;
+      box-shadow: 0 12px 24px rgba(40,122,82,0.24);
+    }
+
+    .secondary-button {
+      background: #f6f7f4;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .primary-button:hover, .secondary-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero-panel {
+      background: linear-gradient(180deg, #f9f7f2 0%, #eef6f0 100%);
+      border: 1px solid #e2e9df;
+      border-radius: 26px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(231,234,223,0.9);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .mini-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .meal-badge {
+      background: #eef8f1;
+      color: var(--accent-dark);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .meal-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .meal-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #f7d48c, #e7b954);
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+    }
+
+    .meal-meta h3 {
+      margin: 0 0 4px;
+      font-size: 1.1rem;
+    }
+
+    .meal-meta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 10px 18px rgba(31, 42, 31, 0.03);
+      padding: 18px 20px;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 1.7rem;
+      letter-spacing: -0.05em;
+      margin-bottom: 4px;
+    }
+
+    .stat-card span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 12px 26px rgba(29, 46, 34, 0.04);
+      padding: 20px;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #ecf6ef, #e3f0e6);
+      color: var(--accent-dark);
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .recipe-showcase {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing: -0.05em;
+    }
+
+    .section-header a {
+      color: var(--accent-dark);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .recipe-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 12px 24px rgba(39, 60, 46, 0.04);
+    }
+
+    .recipe-image {
+      height: 170px;
+      background: linear-gradient(135deg, #d4f0dd, #c7d8c2);
+      display: grid;
+      place-items: center;
+      font-size: 3rem;
+    }
+
+    .recipe-body {
+      padding: 18px 16px 16px;
+    }
+
+    .recipe-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .recipe-tag {
+      background: #f0f6ef;
+      color: var(--accent-dark);
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .recipe-time {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .recipe-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+    }
+
+    .recipe-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.94rem;
+    }
+
+    .recipe-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .recipe-rating {
+      color: #e79d31;
+      font-weight: 700;
+    }
+
+    .recipe-btn {
+      background: #f5faf6;
+      color: var(--accent-dark);
+      border: 1px solid #dfece4;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
     .chat-panel {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: 0 12px 40px rgba(30, 45, 33, .06); overflow: hidden;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
+
     .chat-top {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 15px 20px; border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #fff, #fbfaf7);
     }
+
     .status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .9rem; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ca66b; }
     .clear-btn, .translate-btn {
@@ -53,12 +450,14 @@
     #messages {
       padding: 22px; min-height: 360px; max-height: 58vh; overflow-y: auto;
       display: flex; flex-direction: column; gap: 18px;
+      background: linear-gradient(180deg, #fff, #fdfbf7);
     }
     .message { display: flex; gap: 10px; align-items: flex-start; max-width: 100%; }
     .message.user { flex-direction: row-reverse; }
     .avatar {
       flex: 0 0 34px; width: 34px; height: 34px; display: grid; place-items: center;
       border-radius: 12px; background: #e2f0e6; color: var(--accent); font-size: 17px;
+      font-weight: 700;
     }
     .user .avatar { background: #e7eaf8; color: #4556a0; }
     .bubble {
@@ -72,7 +471,7 @@
     .message-actions { display: flex; justify-content: flex-end; margin-top: 9px; }
     .translate-btn { font-size: .86rem; padding: 7px 10px; color: var(--accent-dark); }
     .translate-btn:disabled, button:disabled { opacity: .55; cursor: not-allowed; }
-    .composer { padding: 16px; border-top: 1px solid var(--border); }
+    .composer { padding: 16px; border-top: 1px solid var(--border); background: #fff; }
     .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 13px; }
     .suggestion {
       border: 1px solid var(--border); border-radius: 999px; padding: 7px 11px;
@@ -94,9 +493,33 @@
     .hint { color: var(--muted); font-size: .78rem; margin: 10px 2px 0; }
     .error { color: var(--danger); }
     .typing { color: var(--muted); font-style: italic; }
-    footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 18px; }
-    @media (max-width: 600px) {
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 960px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid,
+      .recipe-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
       .app { padding: 18px 10px 24px; }
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .stats-strip,
+      .feature-grid,
+      .recipe-grid {
+        grid-template-columns: 1fr;
+      }
+      .section-header { flex-direction: column; align-items: flex-start; }
       #messages { padding: 15px; min-height: 320px; max-height: 60vh; }
       .chat-top { padding: 12px 14px; }
       .bubble { padding: 11px 12px; }
@@ -107,39 +530,187 @@
 </head>
 <body>
   <main class="app">
-    <header>
-      <div class="logo" aria-hidden="true">🍲</div>
-      <h1>Recipe Assistant</h1>
-      <p class="subtitle">Find recipes, adjust ingredients, and cook with confidence.</p>
-    </header>
-
-    <section class="chat-panel" aria-label="Recipe assistant chat">
-      <div class="chat-top">
-        <div class="status"><span class="dot"></span><span>Recipe assistant</span></div>
-        <button class="clear-btn" id="clearBtn" type="button">New chat</button>
-      </div>
-
-      <div id="messages" role="log" aria-live="polite" aria-relevant="additions">
-        <div class="message assistant">
-          <div class="avatar" aria-hidden="true">🍲</div>
-          <div class="bubble">What would you like to cook today? Ask for a recipe, ingredients, cooking steps, or a Telugu translation.</div>
+    <div class="page-shell">
+      <header class="topbar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">🍲</div>
+          <span>Recipe Assistant</span>
         </div>
-      </div>
 
-      <form class="composer" id="chatForm">
-        <div class="suggestions" aria-label="Example prompts">
-          <button class="suggestion" type="button" data-prompt="Show me paneer recipes">Paneer recipes</button>
-          <button class="suggestion" type="button" data-prompt="Suggest a quick vegetarian dinner">Quick vegetarian dinner</button>
-          <button class="suggestion" type="button" data-prompt="Find a recipe using potatoes and tomatoes">Use my ingredients</button>
+        <nav class="nav" aria-label="Primary navigation">
+          <a href="#features">Features</a>
+          <a href="#recipes">Recipes</a>
+          <a href="#assistant">Assistant</a>
+          <button class="nav-button" type="button">Start cooking</button>
+        </nav>
+      </header>
+
+      <section class="hero" aria-label="Hero section">
+        <div class="hero-copy">
+          <span class="hero-badge">Fresh ideas every day</span>
+          <h1>Cook smarter with recipe inspiration.</h1>
+          <p>
+            Discover delicious vegetarian meals, plan your ingredients, and get quick cooking guidance
+            from an AI assistant that understands what you want to cook.
+          </p>
+
+          <div class="hero-actions">
+            <button class="primary-button" type="button">Explore recipes</button>
+            <button class="secondary-button" type="button">Ask the assistant</button>
+          </div>
         </div>
-        <div class="input-row">
-          <textarea id="messageInput" rows="1" maxlength="5000" placeholder="Ask for a recipe..." aria-label="Your message" required></textarea>
-          <button id="sendBtn" type="submit">Send</button>
+
+        <div class="hero-panel" aria-label="Featured recipe preview">
+          <div class="mini-card">
+            <div class="mini-card-header">
+              <span>Featured recipe</span>
+              <span class="meal-badge">Veg</span>
+            </div>
+            <div class="meal-preview">
+              <div class="meal-thumb" aria-hidden="true">🥗</div>
+              <div class="meal-meta">
+                <h3>Garden Paneer Bowl</h3>
+                <p>25 min • Healthy • Family favorite</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-card-header">
+              <span>Smart suggestion</span>
+              <span>18 recipes</span>
+            </div>
+            <div class="meal-preview">
+              <div class="meal-thumb" aria-hidden="true" style="background: linear-gradient(135deg, #ffdcb3, #f2b45c);">🥘</div>
+              <div class="meal-meta">
+                <h3>Quick dinner picks</h3>
+                <p>Protein-rich options ready in under 30 minutes</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="hint">Press Enter to send · Shift + Enter for a new line</p>
-      </form>
-    </section>
-    <footer>Recipe results are generated by your connected ADK backend.</footer>
+      </section>
+
+      <section class="stats-strip" aria-label="Highlights">
+        <div class="stat-card">
+          <strong>120+</strong>
+          <span>Curated recipes</span>
+        </div>
+        <div class="stat-card">
+          <strong>15 min</strong>
+          <span>Average quick meal time</span>
+        </div>
+        <div class="stat-card">
+          <strong>4.9/5</strong>
+          <span>Home-cook rating</span>
+        </div>
+      </section>
+
+      <section class="feature-grid" id="features" aria-label="Feature cards">
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">🔍</div>
+          <h3>Recipe discovery</h3>
+          <p>Search by ingredients, cuisine, or meal type to find recipes tailored to your cravings.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">🧠</div>
+          <h3>AI guidance</h3>
+          <p>Ask for substitutions, prep tips, or a step-by-step plan without leaving the chat.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">🌿</div>
+          <h3>Fresh ingredients</h3>
+          <p>Build simple, wholesome dishes with smart suggestions based on what you already have.</p>
+        </article>
+      </section>
+
+      <section class="recipe-showcase" id="recipes" aria-label="Recipe cards">
+        <div class="section-header">
+          <h2>Popular this week</h2>
+          <a href="#assistant">View all recipes</a>
+        </div>
+
+        <div class="recipe-grid">
+          <article class="recipe-card">
+            <div class="recipe-image" aria-hidden="true">🥬</div>
+            <div class="recipe-body">
+              <div class="recipe-topline">
+                <span class="recipe-tag">Healthy</span>
+                <span class="recipe-time">20 min</span>
+              </div>
+              <h3>Green Protein Bowl</h3>
+              <p>Spinach, chickpeas, quinoa, and lemon dressing with a bright, crunchy finish.</p>
+              <div class="recipe-footer">
+                <span class="recipe-rating">★ 4.8</span>
+                <button class="recipe-btn" type="button">Open</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="recipe-card">
+            <div class="recipe-image" aria-hidden="true" style="background: linear-gradient(135deg, #cedff0, #a8c1d9);">🥔</div>
+            <div class="recipe-body">
+              <div class="recipe-topline">
+                <span class="recipe-tag">Comfort</span>
+                <span class="recipe-time">30 min</span>
+              </div>
+              <h3>Potato Tomato Skillet</h3>
+              <p>Golden potatoes, tomatoes, herbs, and a rich savory sauce for a cozy dinner.</p>
+              <div class="recipe-footer">
+                <span class="recipe-rating">★ 4.9</span>
+                <button class="recipe-btn" type="button">Open</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="recipe-card">
+            <div class="recipe-image" aria-hidden="true" style="background: linear-gradient(135deg, #f7d6ba, #e3b289);">🍛</div>
+            <div class="recipe-body">
+              <div class="recipe-topline">
+                <span class="recipe-tag">Quick</span>
+                <span class="recipe-time">15 min</span>
+              </div>
+              <h3>Paneer Garlic Rice</h3>
+              <p>Fluffy rice tossed with paneer, garlic, peas, and a subtle pepper finish.</p>
+              <div class="recipe-footer">
+                <span class="recipe-rating">★ 4.7</span>
+                <button class="recipe-btn" type="button">Open</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="chat-panel" id="assistant" aria-label="Recipe assistant chat">
+        <div class="chat-top">
+          <div class="status"><span class="dot"></span><span>Recipe assistant</span></div>
+          <button class="clear-btn" id="clearBtn" type="button">New chat</button>
+        </div>
+
+        <div id="messages" role="log" aria-live="polite" aria-relevant="additions">
+          <div class="message assistant">
+            <div class="avatar" aria-hidden="true">🍲</div>
+            <div class="bubble">What would you like to cook today? Ask for a recipe, ingredients, cooking steps, or a Telugu translation.</div>
+          </div>
+        </div>
+
+        <form class="composer" id="chatForm">
+          <div class="suggestions" aria-label="Example prompts">
+            <button class="suggestion" type="button" data-prompt="Show me paneer recipes">Paneer recipes</button>
+            <button class="suggestion" type="button" data-prompt="Suggest a quick vegetarian dinner">Quick vegetarian dinner</button>
+            <button class="suggestion" type="button" data-prompt="Find a recipe using potatoes and tomatoes">Use my ingredients</button>
+          </div>
+          <div class="input-row">
+            <textarea id="messageInput" rows="1" maxlength="5000" placeholder="Ask for a recipe..." aria-label="Your message" required></textarea>
+            <button id="sendBtn" type="submit">Send</button>
+          </div>
+          <p class="hint">Press Enter to send · Shift + Enter for a new line</p>
+        </form>
+      </section>
+      <footer>Recipe results are generated by your connected ADK backend.</footer>
+    </div>
   </main>
 
   <script>
