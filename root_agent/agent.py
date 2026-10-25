@@ -117,7 +117,7 @@ search_tool = FunctionTool(search_recipes)
 
 root_agent = Agent(
     name="recipe_agent",
-    model="gemini-3.7-flash",
+    model="gemini-3.5-flash-lite",
     #output_schema=Recipe,
     tools=[
         search_tool,
