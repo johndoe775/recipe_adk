@@ -13,3 +13,20 @@ services:
         value: "INFO"
       - key: UV_SYSTEM_PYTHON
         value: "1"
+
+  - type: web
+    name: recipe-embedding
+    runtime: python
+    plan: starter
+    pythonVersion: "3.12"
+    buildCommand: pip install uv && uv sync --frozen --no-cache
+    startCommand: uvicorn embedding_service:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: EMBEDDING_MODEL
+        value: "sentence-transformers/all-MiniLM-L6-v2"
+      - key: UV_SYSTEM_PYTHON
+        value: "1"

@@ -5,22 +5,23 @@ from google.adk.tools import FunctionTool
 from root_agent.tools import translator_tool, modify_recipe_tool
 
 from pinecone import Pinecone
-from sentence_transformers import SentenceTransformer
 from functools import lru_cache
 from dotenv import load_dotenv
 
+import json
 import os
-import torch
+import urllib.request
 
 load_dotenv()
 
 # -----------------------------------
 # Lazy, cached initialization.
-# This keeps the same caching idea, but avoids heavy startup work
-# during app import on Render.
+# Uses Hugging Face Inference API for all-MiniLM-L6-v2 embeddings
+# to match existing Pinecone vectors without loading local model.
 # -----------------------------------
 
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_EMBEDDING_SERVICE_URL = "http://127.0.0.1:8001"
 
 
 @lru_cache(maxsize=1)
@@ -36,11 +37,12 @@ def get_groq_model():
 
 
 @lru_cache(maxsize=1)
-def get_sentence_model():
-    return SentenceTransformer(
-        MODEL_NAME,
-        device="cuda" if torch.cuda.is_available() else "cpu",
-    )
+def get_embedding_client():
+    """Return the configured external embedding service base URL."""
+    service_url = os.getenv("EMBEDDING_SERVICE_URL", DEFAULT_EMBEDDING_SERVICE_URL).rstrip("/")
+    if not service_url:
+        raise ValueError("EMBEDDING_SERVICE_URL is missing from the environment")
+    return {"base_url": service_url}
 
 
 @lru_cache(maxsize=1)
@@ -60,17 +62,28 @@ def get_pinecone_index():
 @lru_cache(maxsize=1000)
 def embed_query(query: str) -> tuple:
     """
-    Cache embeddings for repeated queries.
+    Cache embeddings for repeated queries using the dedicated embedding service.
+    Uses all-MiniLM-L6-v2 to match the existing Pinecone vectors.
     Tuple makes the cached result immutable.
     """
-    sentence_model = get_sentence_model()
-    vector = sentence_model.encode(
-        query,
-        normalize_embeddings=True,
-        convert_to_numpy=True,
+    client = get_embedding_client()
+    service_url = client["base_url"]
+    payload = json.dumps({"text": query.strip(), "normalize": False}).encode("utf-8")
+    request = urllib.request.Request(
+        f"{service_url}/embed",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
     )
 
-    return tuple(vector.tolist())
+    with urllib.request.urlopen(request, timeout=60) as response:
+        data = json.loads(response.read().decode("utf-8"))
+
+    vector = data.get("embedding")
+    if not vector:
+        raise ValueError("Embedding service returned no embedding data")
+
+    return tuple(vector)
 
 
 # -----------------------------------
