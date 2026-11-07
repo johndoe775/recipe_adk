@@ -1,8 +1,8 @@
-google-adk
-pinecone
-sentence-transformers
-python-dotenv
-torch
-litellm
-uvicorn
-aiosqlite
+google-adk>=2.3.0
+pinecone>=9.1.0
+sentence-transformers>=5.6.0
+python-dotenv>=1.2.2
+torch>=2.12.1 --index-url https://download.pytorch.org/whl/cpu
+litellm>=1.105.1
+uvicorn>=0.50.0
+aiosqlite>=0.22.1
