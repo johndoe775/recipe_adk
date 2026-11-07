@@ -4,6 +4,7 @@ services:
     name: recipe-assistant
     runtime: python
     plan: free
+    rootDir: .
     buildCommand: pip install uv && uv sync --frozen --no-cache
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -15,21 +16,5 @@ services:
         value: "1"
       - key: PYTHON_VERSION
         value: "3.12.11"
-
-  - type: web
-    name: recipe-embedding
-    runtime: python
-    plan: starter
-    buildCommand: pip install uv && uv sync --frozen --no-cache
-    startCommand: uvicorn embedding_service:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      - key: LOG_LEVEL
-        value: INFO
-      - key: EMBEDDING_MODEL
-        value: sentence-transformers/all-MiniLM-L6-v2
-      - key: UV_SYSTEM_PYTHON
-        value: "1"
-      - key: PYTHON_VERSION
-        value: "3.12.11"
+      - key: EMBEDDING_SERVICE_URL
+        value: https://recipe-embedding.onrender.com

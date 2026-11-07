@@ -12,8 +12,6 @@ app = FastAPI(
     description="Standalone embedding API for Pinecone-compatible recipe search.",
 )
 
-# Load the model once at startup.
-# This is the exact model used to create the Pinecone vectors.
 model = SentenceTransformer(MODEL_NAME)
 
 
@@ -38,7 +36,7 @@ def root():
 
 @app.get("/health")
 def health():
-    test_vector = model.encode("healthy recipe test", normalize_embeddings=True, convert_to_numpy=True)
+    test_vector = model.encode("recipe health check", normalize_embeddings=True, convert_to_numpy=True)
     return {
         "status": "ok",
         "model": MODEL_NAME,
@@ -79,7 +77,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "embedding_service:app",
+        "app:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", "8001")),
         reload=False,
